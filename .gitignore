@@ -15,3 +15,5 @@ __pycache__/
 
 # Лог-файлы
 *.log
+/et --hard
+/et --hard fix gitignore
