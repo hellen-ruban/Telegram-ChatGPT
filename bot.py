@@ -58,10 +58,9 @@ async def random(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def gpt(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_message = update.message.text.replace("/gpt", "").strip()  # Получаем текст сообщения пользователя
     text = load_message("gpt")  # Загружаем приветственное сообщение
-    await send_image(update, context, "gpt")  # Отправляем изображение
-    await send_text(update, context, text)  # Отправляем текстовое сообщение
 
     if not user_message:
+        await send_image(update, context, "gpt")  # Отправляем изображение
         await send_text(update, context, "Будь ласка, введіть запит після команди /gpt.")
         return
 
