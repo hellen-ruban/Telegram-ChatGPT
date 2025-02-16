@@ -106,22 +106,29 @@ async def talk_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
     selected_code = f"talk_{query.data.split('_')[1]}"
     selected_name = next((name for name, code in personalities if code == selected_code), selected_code)
+
     print(f"Обраний персонаж:  {selected_name} ({selected_code})")
     prompt = load_prompt(selected_code)
+
     if prompt is None:
         await query.edit_message_text(text=f"Промт для {selected_name} не знайдено.")
         return
-    await query.edit_message_text(text=f"Ви вибрали {selected_name}. Задавайте питання.")
+    context.user_data['selected_person'] = prompt
+
+    # Отправляем сообщение с кнопкой "Закінчити"
+    end_button = InlineKeyboardMarkup([[InlineKeyboardButton("Закінчити", callback_data="end_talk")]])
+    await query.edit_message_text(text=f"Ви вибрали {selected_name}. Задавайте питання.", reply_markup=end_button)
+
+    # await query.edit_message_text(text=f"Ви вибрали {selected_name}. Задавайте питання.")
     context.user_data['selected_person'] = prompt
 # Ответить пользователю, что он может задавать вопросы
     await send_text(update, context, "Задайте питання і я передам його ChatGPT.")
-
-
 
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_message = update.message.text.strip()
     if not user_message:
         return
+
     prompt = context.user_data.get('selected_person', None)
     if not prompt:
         await send_text(update, context, "Будь ласка, спочатку виберіть особистість через команду /talk.")
@@ -130,7 +137,30 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Формируем запрос в ChatGPT
     gpt_request = f"Ти відповідаєш у стилі наступного опису:\n\n{prompt}\n\nКористувач питає: {user_message}"
     content = await chat_gpt.send_question(gpt_request, "Відповідь ChatGPT")
-    await send_text(update, context, content)
+    # await send_text(update, context, content)
+
+# Добавляем кнопку "Закінчити" к ответу ChatGPT
+    end_button = InlineKeyboardMarkup([[InlineKeyboardButton("Закінчити", callback_data="end_talk")]])
+    await update.message.reply_text(content, reply_markup=end_button)
+
+async def end_talk(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Обработчик кнопки 'Закінчити' – возвращает пользователя в главное меню."""
+    query = update.callback_query
+    await query.answer()
+
+    # Очищаем контекст выбранной личности
+    context.user_data.pop('selected_person', None)
+
+    text = load_message('main')
+    await send_image(update, context, 'main')
+    await send_text(update, context, text)
+    await show_main_menu(update, context, {
+        'start': 'Головне меню',
+        'random': 'Дізнатися випадковий цікавий факт 🧠',
+        'gpt': 'Задати питання чату GPT 🤖',
+        'talk': 'Поговорити з відомою особистістю 👤',
+        'quiz': 'Взяти участь у квізі ❓'
+    })
 
 '''4.Квіз'''
 
@@ -283,7 +313,7 @@ app.add_handler(CommandHandler("quiz", quiz))
 # app.add_handler(CallbackQueryHandler(button, pattern='^(menu_|other_)'))  # Обрабатывает только свои кнопки (если они создаются)
 app.add_handler(CallbackQueryHandler(talk_button, pattern='^talk_'))  # Для общения с личностью
 app.add_handler(CallbackQueryHandler(quiz_button, pattern='^(quiz_|next_question|change_topic|end_quiz)'))  # Для квиза
-
+app.add_handler(CallbackQueryHandler(end_talk, pattern="^end_talk$"))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handler_message))  # Обрабатываем текстовые сообщения
 
 '''Запуск bot-приложения'''
