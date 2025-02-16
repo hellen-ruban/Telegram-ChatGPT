@@ -76,11 +76,11 @@ async def gpt(update: Update, context: ContextTypes.DEFAULT_TYPE):
 '''3.Діалог з відомою особистістю'''
 
 personalities = [
-    ("Курт Кобейн", 'talk_cobain'),
-    ("Стівен Гокінг", 'talk_hawking'),
-    ("Фрідріх Ніцше", 'talk_nietzsche'),
-    ("Королева Єлизавета II", 'talk_queen'),
-    ("Дж.Р.Р. Толкін", 'talk_tolkien')
+    ("Курт Кобейн", 'talk_cobain', 'talk_cobain.jpg'),
+    ("Стівен Гокінг", 'talk_hawking', 'talk_hawking.jpg'),
+    ("Фрідріх Ніцше", 'talk_nietzsche', 'talk_nietzsche.jpg'),
+    ("Королева Єлизавета II", 'talk_queen', 'talk_queen.jpg'),
+    ("Дж.Р.Р. Толкін", 'talk_tolkien', 'talk_tolkien.jpg')
 ]
 # Функция для загрузки промта с проверкой пути
 def load_prompt(name):
@@ -95,7 +95,7 @@ def load_prompt(name):
         return None
 
 async def talk(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    keyboard = [[InlineKeyboardButton(name, callback_data=data)] for name, data in personalities]
+    keyboard = [[InlineKeyboardButton(name, callback_data=data)] for name, data, _ in personalities]
     reply_markup = InlineKeyboardMarkup(keyboard)
     await send_image(update, context, 'talk')
     await send_text(update, context, "Оберіть особистість для діалогу:")
@@ -104,15 +104,29 @@ async def talk(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def talk_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
+
+    # Определение кода личности, выбранной пользователем
     selected_code = f"talk_{query.data.split('_')[1]}"
-    selected_name = next((name for name, code in personalities if code == selected_code), selected_code)
+    selected_name, _, image_filename = next((name, code, img) for name, code, img in personalities if code == selected_code)
 
     print(f"Обраний персонаж:  {selected_name} ({selected_code})")
+
+    # Путь к изображению
+    image_path = os.path.join(os.getcwd(), "resources", "images", image_filename)
+
+    # Загрузка промта
     prompt = load_prompt(selected_code)
 
     if prompt is None:
         await query.edit_message_text(text=f"Промт для {selected_name} не знайдено.")
         return
+        # Отправляем изображение и название личности
+    if os.path.exists(image_path):
+         with open(image_path, 'rb') as image_file:
+            await query.message.reply_photo(photo=image_file, caption=f"Ви вибрали {selected_name}. Задавайте питання.")
+    else:
+         await query.message.reply_text(text=f"Ви вибрали {selected_name}. Задавайте питання.")
+
     context.user_data['selected_person'] = prompt
 
     # Отправляем сообщение с кнопкой "Закінчити"
