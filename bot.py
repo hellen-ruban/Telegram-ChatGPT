@@ -244,7 +244,11 @@ async def quiz_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await send_image(update, context, "quiz")
 
-    keyboard = [[InlineKeyboardButton(topic, callback_data=code)] for code, topic in QUIZ_TOPICS.items()]
+    keyboard = [
+        [InlineKeyboardButton("Програмування", callback_data="quiz_prog")],
+        [InlineKeyboardButton("Математика", callback_data="quiz_math")],
+        [InlineKeyboardButton("Біологія", callback_data="quiz_biology")]
+    ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     await update.message.reply_text("Оберіть тему для квізу:", reply_markup=reply_markup)
