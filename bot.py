@@ -257,7 +257,7 @@ async def quiz_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # Обработчик выбора темы
 async def handle_topic_selection(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
-    await query.answer()
+    await query.answer("Обробляю...")
 
     user_id = update.effective_user.id
     topic_code = query.data
@@ -304,7 +304,7 @@ async def handle_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # Обработчик дополнительных действий
 async def handle_next_action(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
-    await query.answer()
+    await query.answer("Обробляю...")
 
     user_id = update.effective_user.id
     action = query.data
@@ -362,8 +362,9 @@ app.add_handler(CommandHandler("quiz", quiz_command))
 # app.add_handler(CallbackQueryHandler(button, pattern='^(menu_|other_)'))  # Обрабатывает только свои кнопки (если они создаются)
 app.add_handler(CallbackQueryHandler(talk_button, pattern='^talk_'))  # Для общения с личностью
 app.add_handler(CallbackQueryHandler(end_talk, pattern="^end_talk$"))
-app.add_handler(CallbackQueryHandler(handle_topic_selection, pattern="^quiz_"))
 app.add_handler(CallbackQueryHandler(handle_next_action, pattern="^(quiz_more|end_quiz)$")) # для квиза
+app.add_handler(CallbackQueryHandler(handle_topic_selection, pattern="^quiz_"))
+
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_answer))  # Обрабатываем текстовые сообщения
 
 
