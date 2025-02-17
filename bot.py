@@ -228,9 +228,9 @@ def load_prompt():
 # Запрос к ChatGPT
 async def ask_chatgpt(prompt: str, user_input: str):
     client = OpenAI(api_key=CHATGPT_TOKEN)
-    response = client.completions.create(
-        model="gpt-3.5-turbo",  # ← Исправляем на GPT-3.5
-        messages=[{"role": "user", "content": f"{prompt}\n{topic_code}"}],
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[{"role": "user", "content": f"{prompt}\n{user_input}"}],
         max_tokens=50
     )
 
